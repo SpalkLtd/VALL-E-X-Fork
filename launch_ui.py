@@ -227,8 +227,9 @@ def make_prompt(name, wav, sr, save=True):
     return text, lang
 
 @torch.no_grad()
-def infer_from_audio(text, language, accent, audio_prompt, record_audio_prompt, transcript_content):
+def infer_from_audio(text, language, accent, audio_prompt, record_audio_prompt, transcript_content, http=False):
     global model, text_collater, text_tokenizer, audio_tokenizer
+    print(record_audio_prompt)
     audio_prompt = audio_prompt if audio_prompt is not None else record_audio_prompt
     sr, wav_pr = audio_prompt
     if not isinstance(wav_pr, torch.FloatTensor):
@@ -301,7 +302,8 @@ def infer_from_audio(text, language, accent, audio_prompt, record_audio_prompt, 
     # offload model
     model.to('cpu')
     torch.cuda.empty_cache()
-
+    if http == True:
+        return samples.squeeze(0).cpu().numpy()
     message = f"text prompt: {text_pr}\nsythesized text: {text}"
     return message, (24000, samples.squeeze(0).cpu().numpy())
 
@@ -619,7 +621,7 @@ def main():
                               outputs=[text_output_4, audio_output_4])
 
     webbrowser.open("http://127.0.0.1:7860")
-    app.launch()
+    app.launch(share=True)
 
 if __name__ == "__main__":
     formatter = (

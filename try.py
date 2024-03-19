@@ -22,23 +22,18 @@ app = Flask(__name__)
 
 def base64_to_audio_array(base64_audio):
     print(1)
-    # 解码 Base64 字符串
     audio_data = base64.b64decode(base64_audio)
     
     print(2)
-    # 使用 pydub 从二进制数据创建音频段（这里假设是 MP3 格式，根据需要调整）
     audio_segment = AudioSegment.from_file(BytesIO(audio_data), format='webm', codec='opus')
     
     print(3)
-    # 将 AudioSegment 对象导出为 WAV 格式的二进制数据
-    wav_bytes = audio_segment.export(format="wav", sample_rate = SAMPLE_RATE, parameters=["-ar", "48000", "-ac", "1"])
-    
+    wav_bytes = audio_segment.export(format="wav", parameters=["-ar", "48000", "-ac", "1"], codec="pcm_s32le")
+
     print(4)
-    # 使用 scipy 读取 WAV 数据，获取采样率和音频数组
     sample_rate, audio_array = read_wav(BytesIO(wav_bytes.read()))
     
     print(5)
-    # 确保音频数组是 numpy 格式
     audio_array = np.array(audio_array)
     
     return sample_rate, audio_array
@@ -53,7 +48,7 @@ def generate_audio ():
         transcript = data.get('Transcript', '')
         wavAudioBase64 = data.get('WavAudioBase64', '')
 
-        sample_rate, audio_array = infer_from_audio(outgoingText, outgoingLanguage, "no-accent", None, base64_to_audio_array(wavAudioBase64),transcript, True)
+        audio_array = infer_from_audio(outgoingText, outgoingLanguage, "no-accent", None, base64_to_audio_array(wavAudioBase64),transcript, True)
         write_wav("First-Try.wav", SAMPLE_RATE, audio_array)
         
         return jsonify({"message": "Audio generated successfully!"}), 200
@@ -63,4 +58,4 @@ def generate_audio ():
     
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, host='0.0.0.0')
