@@ -49,9 +49,11 @@ def generate_audio ():
         wavAudioBase64 = data.get('WavAudioBase64', '')
 
         audio_array = infer_from_audio(outgoingText, outgoingLanguage, "no-accent", None, base64_to_audio_array(wavAudioBase64),transcript, True)
+        encodeAudioArray = base64.b64encode(audio_array)
+
         write_wav("First-Try.wav", SAMPLE_RATE, audio_array)
         
-        return jsonify({"message": "Audio generated successfully!"}), 200
+        return jsonify({"message": "Audio generated successfully!", "WavAudioBase64" : encodeAudioArray, "SampleRate": SAMPLE_RATE}), 200
     else:
         return jsonify({"error": "Request must be JSON"}), 400
     
